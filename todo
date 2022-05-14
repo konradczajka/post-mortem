@@ -1,0 +1,2 @@
+* partial function w systemach aby uniknąć konieczności obsługi wszystkich przypadków
+* rozdzielić read/writ w zależnośćiach systemów
