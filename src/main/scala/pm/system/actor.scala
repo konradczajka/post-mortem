@@ -2,19 +2,19 @@ package pm.system
 
 import pm.model.*
 
-object ActorSystem extends System[Map[ActorId, Actor]] :
-  def run(actors: Map[ActorId, Actor], e: Event): (Map[ActorId, Actor], List[Event]) = e match
+object ActorSystem extends System[Actors] :
+  def run(actors: Actors, e: Event): (Actors, List[Event]) = e match
     case ActorHit(actorId, hpLoss) => actors.get(actorId) match
       case Some(c: Creature) =>
         val newC = c.copy(hp = c.hp - hpLoss)
-        val events = if newC.hp >= 0 then
+        val events = if newC.hp > 0 then
           List(ActorLostHp(actorId, hpLoss)) else
           List(ActorLostHp(actorId, hpLoss), ActorDied(actorId))
-        (actors.updated(actorId, newC), events)
+        (actors.update(actorId, newC), events)
       case Some(_) => (actors, List(DebugEvent("Unsupported actor hit : " + actorId)))
       case None => (actors, List(DebugEvent("Hit actor not found : " + actorId)))
 
-    case ActorDied(actorId) => (actors - actorId, Nil)
+    case ActorDied(actorId) => (actors.remove(actorId), Nil)
 
     case _ => (actors, Nil)
 

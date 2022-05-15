@@ -35,7 +35,7 @@ def testMov: Unit =
   val otherId: ActorId = "2"
   val level: MapLevel = MapLevel.empty(10, 5)
   val actorsPositions = Map(Coordinate(2, 2) -> player.id)
-  val initialWorld = model.World(locations = Locations(map = level, actors = actorsPositions), events = CurrentEvents.empty, actors = Map(player.id -> player))
+  val initialWorld = model.World(locations = Locations(map = level, actors = actorsPositions), events = CurrentEvents.empty, actors = Actors(Map(player.id -> player)))
 
 
   val events = List(MoveAttempted(player.id, Direction.UP), MoveAttempted(player.id, Direction.RIGHT), MoveAttempted(otherId, Direction.UP), MoveAttempted(player.id, Direction.UP))

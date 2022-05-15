@@ -10,6 +10,14 @@ case class Coordinate(x: Int, y: Int):
     case Direction.LEFT => Coordinate(x - 1, y)
     case Direction.RIGHT => Coordinate(x + 1, y)
 
+  def distanceTo(other: Coordinate): Int =
+    Math.abs(x - other.x) + Math.abs(y - other.y)
+
+  def directionTo(other: Coordinate): Direction =
+    if Math.abs(x - other.x) >= Math.abs(y - other.y) then
+      (if x > other.x then Direction.LEFT else Direction.RIGHT) else
+      (if y > other.y then Direction.UP else Direction.DOWN)
+
 enum Material(val passable: Boolean):
   case Floor extends Material(true)
   case Wall extends Material(false)
