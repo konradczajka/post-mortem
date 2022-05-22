@@ -19,6 +19,7 @@ object ActorSystem extends System[Actors] :
     case _ => (actors, Nil)
 
 
+case class Wait(actorId: ActorId) extends Action
 case class ActorHit(a: ActorId, hpLoss: Int) extends Event
 
 case class ActorLostHp(a: ActorId, hpLoss: Int) extends Event

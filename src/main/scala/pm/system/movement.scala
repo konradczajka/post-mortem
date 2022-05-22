@@ -23,7 +23,7 @@ object MovementSystem extends System[Locations] :
 
   case class MoveAttempted(a: ActorId, d: Direction) extends Event
 
-  case class MovePerformed(a: ActorId, newC: Coordinate) extends Event
+  case class MovePerformed(actorId: ActorId, newC: Coordinate) extends Action
 
   object MoveBlockedByEnvironment extends Event
 
@@ -31,7 +31,7 @@ object MovementSystem extends System[Locations] :
 
 @main
 def testMov: Unit =
-  val player = Creature.player(hp = 10, atk = 6)
+  val player = Creature.player(hp = 10, atk = 6, acc=100, initiative = 8)
   val otherId: ActorId = "2"
   val level: MapLevel = MapLevel.empty(10, 5)
   val actorsPositions = Map(Coordinate(2, 2) -> player.id)
@@ -39,7 +39,7 @@ def testMov: Unit =
 
 
   val events = List(MoveAttempted(player.id, Direction.UP), MoveAttempted(player.id, Direction.RIGHT), MoveAttempted(otherId, Direction.UP), MoveAttempted(player.id, Direction.UP))
-  val p = MovementSystem(World.locationsL).flatMap(_ => EventLoggingSystem(Lens[World, Unit](_ => ())(_ => w => w)))
+  val p = MovementSystem(World.locationsL) andThen EventLoggingSystem(Lens[World, Unit](_ => ())(_ => w => w))
   val r = events.foldLeft(initialWorld)((w, e) => runIteration(w, e, p))
 
   println(r.locations.print)

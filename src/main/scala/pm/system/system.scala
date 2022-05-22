@@ -7,31 +7,34 @@ import cats.implicits.*
 import monocle.*
 import monocle.macros.GenLens
 import monocle.syntax.all.*
-import pm.model.World
+import pm.model.{Event, World}
 
 import scala.annotation.tailrec
 
 // TODO: Monoid?
 case class CurrentEvents(current: Option[Event], collected: List[Event])
+
 object CurrentEvents:
   def empty: CurrentEvents = CurrentEvents(None, List())
 
+type SystemAction = World => World
+
 trait System[A]:
-  def apply(stateL: Lens[World, A]): State[World, Unit] = State(
-    m => {
-      World.currentEventL.get(m) match
+  def apply(stateL: Lens[World, A]): SystemAction =
+    w =>
+      World.currentEventL.get(w) match
         case Some(e) =>
-          val (nws, oe) = run(stateL.get(m), e)
-          ((stateL.replace(nws) compose World.collectedEventsL.modify(_ ::: oe)) (m), ())
-        case None => (m, ())
-    })
+          val (nws, oe) = run(stateL.get(w), e)
+          (stateL.replace(nws) compose World.collectedEventsL.modify(_ ::: oe)) (w)
+        case None => w
+
 
   def run(ws: A, e: Event): (A, List[Event])
 
-def programFromSystems(systems: List[State[World, Unit]]): State[World, Unit] =
-  systems.tail.foldLeft(systems.head)((s1, s2) => s1.flatMap(_ => s2))
+def programFromSystems(systems: List[SystemAction]): SystemAction =
+  systems.foldLeft((w => w): SystemAction)((s1, s2) => s1 andThen s2)
 
-object EventLoggingSystem extends System[Unit]:
+object EventLoggingSystem extends System[Unit] :
   def run(ws: Unit, e: Event): (Unit, List[Event]) =
     println(e)
     ((), Nil)
@@ -54,8 +57,8 @@ object EventLoggingSystem extends System[Unit]:
 //  println(r)
 
 @tailrec
-def runIteration(w: World, e: Event, p: State[World, Unit]): World =
-  val nw = p.runS(World.currentEventL.replace(Some(e))(w)).value
+def runIteration(w: World, e: Event, p: SystemAction): World =
+  val nw = p.apply(World.currentEventL.replace(Some(e))(w))
   World.collectedEventsL.get(nw) match
     case e :: rest =>
       runIteration(
@@ -63,5 +66,5 @@ def runIteration(w: World, e: Event, p: State[World, Unit]): World =
         e, p)
     case Nil => World.currentEventL.replace(None)(nw)
 
-def runEvents(program: State[World, Unit], initialWorld: World, events: List[Event]): World =
+def runEvents(program: SystemAction, initialWorld: World, events: List[Event]): World =
   events.foldLeft(initialWorld)((w, e) => runIteration(w, e, program))

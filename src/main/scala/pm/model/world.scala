@@ -3,7 +3,7 @@ package pm.model
 import monocle.Lens
 import monocle.macros.GenLens
 import pm.model.{Actor, ActorId, Locations, World}
-import pm.system.{CurrentEvents, Event}
+import pm.system.CurrentEvents
 
 type LocationsAndActors = (Locations, Actors)
 

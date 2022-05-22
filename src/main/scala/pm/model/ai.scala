@@ -2,7 +2,7 @@ package pm.model
 
 import cats.implicits.*
 import pm.system.MovementSystem.MoveAttempted
-import pm.system.{DebugEvent, Event, MeleeAttackAttempted}
+import pm.system.MeleeAttackAttempted
 
 trait AI:
   def process(actorId: ActorId, w: LocationsAndActors): List[Event]
