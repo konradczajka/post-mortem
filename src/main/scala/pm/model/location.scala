@@ -44,7 +44,7 @@ object MapLevel:
     MapLevel(tiles = tiles)
   }
 
-case class Locations(private val map: MapLevel, actors: Map[Coordinate, ActorId]):
+case class Locations(val map: MapLevel, actors: Map[Coordinate, ActorId]):
   def passable(c: Coordinate): Boolean =
     map.materialAt(c).passable
 

@@ -20,4 +20,4 @@ object TestMeleeEnemyAI extends AI :
 
     result match
       case Some(event) => List(event)
-      case None => List(Wait(actorId))
+      case None => List(DebugEvent(s"Can't determine an action for $actorId"))

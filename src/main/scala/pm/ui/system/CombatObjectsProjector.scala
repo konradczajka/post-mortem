@@ -8,6 +8,8 @@ import org.cosplay.{CPImage, CPImageSprite}
 import CPColor.*
 import CPArrayImage.*
 import CPPixel.*
+import pm.model.Material.Wall
+import pm.ui.Game.WORLD_MARGIN
 
 object CombatObjectsProjector extends System[World] {
 
@@ -33,6 +35,14 @@ object CombatObjectsProjector extends System[World] {
   })
 
   private def combatInitialization(world: World): ObjectAction = ctx => {
+    for
+      x <- 0 until world.locations.map.width
+      y <- 0 until world.locations.map.height
+    do
+      world.locations.map.materialAt(Coordinate(x, y)) match
+        case Wall => ctx.addObject(wallObject(Coordinate(x + WORLD_MARGIN, y + WORLD_MARGIN)))
+        case _ => ()
+
     world.locations.actors
       .map((pos, id) => (pos, world.actors.get(id)))
       .foreach((pos, actorOpt) =>
@@ -47,7 +57,7 @@ object CombatObjectsProjector extends System[World] {
   private def actorMove: (ActorId, Coordinate) => ObjectAction = (a: ActorId, c: Coordinate) =>
     ctx =>
       ctx.getObject(a) match
-        case Some(ac: ActorSprite) => ac.move(c.x, c.y)
+        case Some(ac: ActorSprite) => ac.move(c.x + WORLD_MARGIN, c.y + WORLD_MARGIN)
         case _                     => ()
 
   private def constructObject(pos: Coordinate, actor: Actor): CPSceneObject =
@@ -56,9 +66,17 @@ object CombatObjectsProjector extends System[World] {
       case _         => "%"
     new ActorSprite(
       id = actor.id,
+      x = pos.x + WORLD_MARGIN,
+      y = pos.y + WORLD_MARGIN,
+      img = new CPArrayImage(prepSeq(sprite), (ch, _, _) => ch & C_WHITE)
+    )
+
+  private def wallObject(pos: Coordinate): CPSceneObject =
+    new ActorSprite(
+      id = s"wall-${pos.x}-${pos.y}",
       x = pos.x,
       y = pos.y,
-      img = new CPArrayImage(prepSeq(sprite), (ch, _, _) => ch & C_WHITE)
+      img = new CPArrayImage(prepSeq("#"), (ch, _, _) => ch & C_WHITE)
     )
 }
 
