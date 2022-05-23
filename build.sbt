@@ -9,7 +9,7 @@ lazy val root = project
     scalaVersion := scala3Version,
     libraryDependencies ++= Seq(
       "org.typelevel" %% "cats-core" % "2.7.0",
-      "org.cosplayengine" % "cosplay" % "0.6.5",
+      "org.cosplayengine" % "cosplay" % "0.6.6",
       "dev.optics" %% "monocle-core"  % "3.1.0",
       "dev.optics" %% "monocle-macro" % "3.1.0",
       "org.scalameta" %% "munit" % "0.7.29" % Test

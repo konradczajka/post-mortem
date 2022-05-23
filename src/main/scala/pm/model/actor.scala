@@ -8,7 +8,7 @@ trait Actor:
 
 type ActorId = String
 
-val PLAYER_ID: ActorId = "0"
+val PLAYER_ID: ActorId = "actor-0"
 
 case class Creature(id: ActorId, hp: Int, atk: Int, acc: Int, ai: Option[AI], initiative: Int) extends Actor
 object Creature:

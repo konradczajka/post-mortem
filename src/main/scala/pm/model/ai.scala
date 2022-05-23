@@ -2,7 +2,7 @@ package pm.model
 
 import cats.implicits.*
 import pm.system.MovementSystem.MoveAttempted
-import pm.system.MeleeAttackAttempted
+import pm.system.{MeleeAttackAttempted, Wait}
 
 trait AI:
   def process(actorId: ActorId, w: LocationsAndActors): List[Event]
@@ -20,4 +20,4 @@ object TestMeleeEnemyAI extends AI :
 
     result match
       case Some(event) => List(event)
-      case None => List(DebugEvent(s"Can't determine an action for $actorId"))
+      case None => List(Wait(actorId))

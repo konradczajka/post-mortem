@@ -6,3 +6,4 @@ trait Action extends Event:
   def actorId: ActorId
 
 case class DebugEvent(msg: String) extends Event
+object CombatStarted extends Event
