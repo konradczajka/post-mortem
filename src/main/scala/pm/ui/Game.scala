@@ -1,11 +1,11 @@
 package pm.ui
 
 import monocle.Lens
-import pm.ui.system.*
-import org.cosplay.*
+import org.cosplay.{CPDim, CPEngine, CPGameInfo}
 import pm.model.*
 import pm.system.*
 import pm.system.MovementSystem.*
+import pm.ui.system.*
 
 import scala.util.Random
 
@@ -13,8 +13,8 @@ object Game:
   val WORLD_MARGIN = 5
   var w = createWorld()
   val p = createProgram()
-  def main(args: Array[String]): Unit =
 
+  def main(args: Array[String]): Unit =
 
     CPEngine.init(
       CPGameInfo(name = "Post mortem"),
@@ -30,11 +30,9 @@ object Game:
 
     sys.exit(0)
 
-
-
 def createWorld(): World =
-  val player = Creature.player(hp = 10, atk = 4, acc=80, initiative = 8)
-  val monster = Creature(id = "actor-2", hp = 10, atk = 4, acc=50, ai = Some(TestMeleeEnemyAI), initiative = 6)
+  val player = Creature.player(hp = 10, atk = 4, acc = 80, initiative = 8)
+  val monster = Creature(id = "actor-2", hp = 10, atk = 4, acc = 50, ai = Some(TestMeleeEnemyAI), initiative = 6)
   val level: MapLevel = MapLevel.empty(40, 20)
   val actorsPositions = Map(
     Coordinate(2, 2) -> player.id,
