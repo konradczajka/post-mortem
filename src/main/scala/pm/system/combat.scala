@@ -3,6 +3,7 @@ package pm.system
 import monocle.Lens
 import pm.model
 import pm.model.*
+import pm.model.World.{given}
 import pm.system.MovementSystem.MoveAttempted
 
 import scala.util.Random
@@ -54,12 +55,12 @@ def testCombat: Unit =
   )
 
   val systems = List(
-    EventLoggingSystem(Lens[World, Unit](_ => ())(_ => w => w)),
-    MovementSystem(World.locationsL),
-    CombatSystem(new Random(1))(World.locationsAndActorsL),
-    ActorSystem(World.actorsL),
-    AISystem(World.locationsAndActorsL),
-    TurnsSystem(World.actorsL)
+    EventLoggingSystem(),
+    MovementSystem(),
+    CombatSystem(new Random(1))(),
+    ActorSystem(),
+    AISystem(),
+    TurnsSystem()
   )
 
   val p = programFromSystems(systems)

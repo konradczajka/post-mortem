@@ -3,6 +3,7 @@ package pm.ui
 import monocle.Lens
 import org.cosplay.{CPDim, CPEngine, CPGameInfo}
 import pm.model.*
+import pm.model.World.given
 import pm.system.*
 import pm.system.MovementSystem.*
 import pm.ui.system.*
@@ -45,13 +46,13 @@ def createWorld(): World =
 def createProgram(): SystemAction =
 
   val systems: List[SystemAction] = List(
-    EventLoggingSystem(Lens[World, Unit](_ => ())(_ => w => w)),
-    MovementSystem(World.locationsL),
-    CombatSystem(new Random(1))(World.locationsAndActorsL),
-    ActorSystem(World.actorsL),
-    AISystem(World.locationsAndActorsL),
-    TurnsSystem(World.actorsL),
-    CombatObjectsProjector(Lens[World, World](w => w)(_ => w => w))
+    EventLoggingSystem(),
+    MovementSystem(),
+    CombatSystem(new Random(1))(),
+    ActorSystem(),
+    AISystem(),
+    TurnsSystem(),
+    CombatObjectsProjector()
   )
 
   programFromSystems(systems)

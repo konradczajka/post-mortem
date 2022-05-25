@@ -4,6 +4,7 @@ import cats.data.State
 import monocle.Lens
 import pm.model
 import pm.model.*
+import pm.model.World.{given}
 import pm.system.*
 import pm.system.MovementSystem.MoveAttempted
 
@@ -51,12 +52,12 @@ def createWorld(): World =
 def createProgram(): SystemAction =
 
   val systems = List(
-    EventLoggingSystem(Lens[World, Unit](_ => ())(_ => w => w)),
-    MovementSystem(World.locationsL),
-    CombatSystem(new Random(1))(World.locationsAndActorsL),
-    ActorSystem(World.actorsL),
-    AISystem(World.locationsAndActorsL),
-    TurnsSystem(World.actorsL)
+    EventLoggingSystem(),
+    MovementSystem(),
+    CombatSystem(new Random(1))(),
+    ActorSystem(),
+    AISystem(),
+    TurnsSystem()
   )
 
   programFromSystems(systems)

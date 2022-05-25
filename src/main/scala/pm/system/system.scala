@@ -7,7 +7,7 @@ import cats.implicits.*
 import monocle.*
 import monocle.macros.GenLens
 import monocle.syntax.all.*
-import pm.model.{Event, World}
+import pm.model.{Event, World, WorldLens}
 
 import scala.annotation.tailrec
 
@@ -20,12 +20,12 @@ object CurrentEvents:
 type SystemAction = World => World
 
 trait System[A]:
-  def apply(stateL: Lens[World, A]): SystemAction =
+  def apply()(using wl: WorldLens[A]): SystemAction =
     w =>
       World.currentEventL.get(w) match
         case Some(e) =>
-          val (nws, oe) = run(stateL.get(w), e)
-          (stateL.replace(nws) compose World.collectedEventsL.modify(_ ::: oe)) (w)
+          val (nws, oe) = run(wl.lens.get(w), e)
+          (wl.lens.replace(nws) compose World.collectedEventsL.modify(_ ::: oe)) (w)
         case None => w
 
 

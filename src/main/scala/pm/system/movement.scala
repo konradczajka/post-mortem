@@ -3,6 +3,7 @@ package pm.system
 import monocle.*
 import pm.model
 import pm.model.*
+import pm.model.World.given
 import pm.system.MovementSystem.MoveAttempted
 
 object MovementSystem extends System[Locations] :
@@ -39,7 +40,7 @@ def testMov: Unit =
 
 
   val events = List(MoveAttempted(player.id, Direction.UP), MoveAttempted(player.id, Direction.RIGHT), MoveAttempted(otherId, Direction.UP), MoveAttempted(player.id, Direction.UP))
-  val p = MovementSystem(World.locationsL) andThen EventLoggingSystem(Lens[World, Unit](_ => ())(_ => w => w))
+  val p = MovementSystem() andThen EventLoggingSystem()
   val r = events.foldLeft(initialWorld)((w, e) => runIteration(w, e, p))
 
   println(r.locations.print)
