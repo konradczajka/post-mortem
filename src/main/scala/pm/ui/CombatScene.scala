@@ -3,7 +3,6 @@ package pm.ui
 import org.cosplay.{CPColor, CPDim, CPKeyboardSprite, CPLabelSprite, CPPixel, CPScene, CPSceneObjectContext}
 import pm.model.*
 import pm.model.Direction.*
-import pm.system.MovementSystem.MoveAttempted
 import pm.system.*
 import org.cosplay.CPKeyboardKey.*
 import pm.ui.system.CombatObjectsProjector
@@ -19,8 +18,8 @@ class CombatScene(dim: CPDim) extends CPScene("combat", Some(dim), CombatScene.B
     val keySpS = new CPKeyboardSprite(KEY_SPACE, _ => Game.w = runIteration(Game.w, Wait(PLAYER_ID), Game.p))
     val keySpAI = new CPKeyboardSprite(KEY_LO_I, _ => Game.w = runIteration(Game.w, MeleeAttackAttempted(PLAYER_ID, UP), Game.p))
     val keySpAK = new CPKeyboardSprite(KEY_LO_K, _ => Game.w = runIteration(Game.w, MeleeAttackAttempted(PLAYER_ID, DOWN), Game.p))
-    val keySpAJ = new CPKeyboardSprite(KEY_LO_J, _ => Game.w = runIteration(Game.w, ItemEquipped(PLAYER_ID, AtkAmu1), Game.p))
-    val keySpAL = new CPKeyboardSprite(KEY_LO_L, _ => Game.w = runIteration(Game.w, ItemRemoved(PLAYER_ID, AtkAmu1), Game.p))
+    val keySpAJ = new CPKeyboardSprite(KEY_LO_J, _ => Game.w = runIteration(Game.w, MeleeAttackAttempted(PLAYER_ID, LEFT), Game.p))
+    val keySpAL = new CPKeyboardSprite(KEY_LO_L, _ => Game.w = runIteration(Game.w, MeleeAttackAttempted(PLAYER_ID, RIGHT), Game.p))
     val txt = new CPLabelSprite(x = 10, y =2, z = 0, fg=CPColor.C_AQUA, text = " Post Mortem test")
     addObjects(txt, keySpU, keySpD, keySpL, keySpR, keySpS, keySpAI, keySpAK, keySpAJ, keySpAL, CombatObjectsProjector.sprite)
 

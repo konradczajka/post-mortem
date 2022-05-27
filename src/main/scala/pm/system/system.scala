@@ -7,7 +7,7 @@ import cats.implicits.*
 import monocle.*
 import monocle.macros.GenLens
 import monocle.syntax.all.*
-import pm.model.{Event, World, WorldLens}
+import pm.model.*
 
 import scala.annotation.tailrec
 
@@ -17,54 +17,48 @@ case class CurrentEvents(current: Option[Event], collected: List[Event])
 object CurrentEvents:
   def empty: CurrentEvents = CurrentEvents(None, List())
 
-type SystemAction = World => World
-
-trait System[A]:
-  def apply()(using wl: WorldLens[A]): SystemAction =
-    w =>
-      World.currentEventL.get(w) match
-        case Some(e) =>
-          val (nws, oe) = run(wl.lens.get(w), e)
-          (wl.lens.replace(nws) compose World.collectedEventsL.modify(_ ::: oe)) (w)
-        case None => w
-
-
-  def run(ws: A, e: Event): (A, List[Event])
-
-def programFromSystems(systems: List[SystemAction]): SystemAction =
-  systems.foldLeft((w => w): SystemAction)((s1, s2) => s1 andThen s2)
-
-object EventLoggingSystem extends System[Unit] :
-  def run(ws: Unit, e: Event): (Unit, List[Event]) =
+object EventLoggingHandler extends Handler1[UnitState.type]:
+  def handle(e: Event, s: UnitState.type, v: Unit): (List[Event], Unit) = {
     println(e)
-    ((), Nil)
+    (Nil, ())
+  }
 
-//
-//@main
-//def systemTest: Unit =
-//  val initialPosition = Coordinate(2, 2)
-//  val initialWorld = World(initialPosition, 0, None, List[Event]())
-//
-//  val ecL = GenLens[World](_.ec)
-//  val cL = GenLens[World](_.c)
-//  val events = List(MoveAttempted(Direction.UP), MoveAttempted(Direction.RIGHT), MoveAttempted(Direction.UP))
-//  val systems = List(TestMoveSystem(cL), TestEventCounterSystem(ecL))
-//
-//  val p = systems.tail.foldLeft(systems.head)((s1, s2) => s1.flatMap(_ => s2))
-//
-//  val r = events.foldLeft(initialWorld)((w, e) => runIteration(w, e, p))
-//
-//  println(r)
+trait Handler1[S <: StateType]:
+  def handle(e: Event, s: S, v: s.Type): (List[Event], s.Type)
+
+  final def apply(s: S): WorldState => WorldState = (ws: WorldState) =>
+    val ce = ws.get(CurrentEventsState)
+
+    ce.current match
+      case Some(event) =>
+        val (events, newState) = handle(event, s, ws.get(s))
+        ws.put(CurrentEventsState, CurrentEvents(ce.current, ce.collected ::: events))
+          .put(s, newState)
+      case None => ws
+
+trait Handler2[S1 <: StateType, S2 <: StateType]:
+  def handle(e: Event, s1: S1, s2: S2, v1: s1.Type, v2: s2.Type): (List[Event], s1.Type, s2.Type)
+
+  final def apply(s1: S1, s2: S2): WorldState => WorldState = (ws: WorldState) =>
+    val ce = ws.get(CurrentEventsState)
+
+    ce.current match
+      case Some(event) =>
+        val (events, nl, na) = handle(event, s1, s2, ws.get(s1), ws.get(s2))
+        ws.put(CurrentEventsState, CurrentEvents(ce.current, ce.collected ::: events))
+          .put(s1, nl)
+          .put(s2, na)
+      case None => ws
+
+def buildProgram(handlers: List[WorldState => WorldState]): WorldState => WorldState =
+  handlers.foldLeft((w => w): WorldState => WorldState)((s1, s2) => s1 andThen s2)
 
 @tailrec
-def runIteration(w: World, e: Event, p: SystemAction): World =
-  val nw = p.apply(World.currentEventL.replace(Some(e))(w))
-  World.collectedEventsL.get(nw) match
+def runIteration(ws: WorldState, e: Event, p: WorldState => WorldState): WorldState =
+  val ce = ws.get(CurrentEventsState)
+  val nws = p(ws.put(CurrentEventsState, CurrentEvents(Some(e), ce.collected)))
+  val nce = nws.get(CurrentEventsState)
+  nce.collected match
     case e :: rest =>
-      runIteration(
-        (World.currentEventL.replace(Some(e)) compose World.collectedEventsL.replace(rest)) (nw),
-        e, p)
-    case Nil => World.currentEventL.replace(None)(nw)
-
-def runEvents(program: SystemAction, initialWorld: World, events: List[Event]): World =
-  events.foldLeft(initialWorld)((w, e) => runIteration(w, e, program))
+      runIteration(nws.put(CurrentEventsState, CurrentEvents(Some(e), rest)), e, p)
+    case Nil => nws.put(CurrentEventsState, CurrentEvents(None, Nil))

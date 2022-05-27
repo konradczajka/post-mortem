@@ -1,50 +1,49 @@
 package pm.ui.system
 
-import pm.model.{Actor, ActorId, CombatStarted, Coordinate, Event, World, PLAYER_ID}
-import pm.system.{ActorDied, System}
-import pm.system.MovementSystem.MovePerformed
+import pm.system.*
 import org.cosplay.*
-import org.cosplay.{CPImage, CPImageSprite}
 import CPColor.*
 import CPArrayImage.*
 import CPPixel.*
-import pm.model.Material.Wall
+import pm.model.*
+import pm.model.Material.*
 import pm.ui.Game.WORLD_MARGIN
 
-object CombatObjectsProjector extends System[World] {
+object CombatObjectsProjector extends Handler2[LocationsState.type, ActorsState.type] {
 
   private type ObjectAction = CPSceneObjectContext => Unit
 
   private var actionsQueue: List[ObjectAction] = Nil
 
-  def run(world: World, e: Event): (World, List[Event]) = e match
+
+  def handle(e: Event, s1: LocationsState.type , s2: ActorsState.type , locations: Locations, actors: Actors): (List[Event], Locations, Actors) = e match
     case CombatStarted =>
-      actionsQueue = actionsQueue :+ combatInitialization(world)
-      (world, Nil)
+      actionsQueue = actionsQueue :+ combatInitialization(locations, actors)
+      (Nil, locations, actors)
     case MovePerformed(a: ActorId, c: Coordinate) =>
       actionsQueue = actionsQueue :+ actorMove(a, c)
-      (world, Nil)
+      (Nil, locations, actors)
     case ActorDied(a: ActorId) =>
       actionsQueue = actionsQueue :+ actorRemoval(a)
-      (world, Nil)
-    case _ => (world, Nil)
+      (Nil, locations, actors)
+    case _ => (Nil, locations, actors)
 
   val sprite: CPOffScreenSprite = CPOffScreenSprite((ctx: CPSceneObjectContext) => {
     actionsQueue.foreach(a => a(ctx))
     actionsQueue = Nil
   })
 
-  private def combatInitialization(world: World): ObjectAction = ctx => {
+  private def combatInitialization(locations: Locations, actors: Actors): ObjectAction = ctx => {
     for
-      x <- 0 until world.locations.map.width
-      y <- 0 until world.locations.map.height
+      x <- 0 until locations.map.width
+      y <- 0 until locations.map.height
     do
-      world.locations.map.materialAt(Coordinate(x, y)) match
+      locations.map.materialAt(Coordinate(x, y)) match
         case Wall => ctx.addObject(wallObject(Coordinate(x + WORLD_MARGIN, y + WORLD_MARGIN)))
         case _ => ()
 
-    world.locations.actors
-      .map((pos, id) => (pos, world.actors.get(id)))
+    locations.actors
+      .map((pos, id) => (pos, actors.get(id)))
       .foreach((pos, actorOpt) =>
         actorOpt match
           case Some(actor) => ctx.addObject(constructObject(pos, actor))

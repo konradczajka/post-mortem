@@ -3,9 +3,7 @@ package pm.ui
 import monocle.Lens
 import org.cosplay.{CPDim, CPEngine, CPGameInfo}
 import pm.model.*
-import pm.model.World.given
 import pm.system.*
-import pm.system.MovementSystem.*
 import pm.ui.system.*
 
 import scala.util.Random
@@ -31,28 +29,29 @@ object Game:
 
     sys.exit(0)
 
-def createWorld(): World =
+def createWorld(): WorldState =
   val player = Creature.player(hp = 10, atk = 4, acc = 80, initiative = 8)
-  val monster = Creature(id = "actor-2", hp = 10, atk = 4, acc = 50, ai = Some(TestMeleeEnemyAI), initiative = 6)
+  val monster = Creature(id = "actor-2", hp = 10, atk = 4, acc = 50, ai = Some(TestMeleeEnemyAI2), initiative = 6)
   val level: MapLevel = MapLevel.empty(40, 20)
   val actorsPositions = Map(
     Coordinate(2, 2) -> player.id,
     Coordinate(10, 6) -> monster.id)
-  World(
-    locations = Locations(map = level, actors = actorsPositions),
-    events = CurrentEvents.empty,
-    actors = Actors(Map(player.id -> player, monster.id -> monster)))
+  InMemoryWorldState(Map())
+    .put(LocationsState, Locations(map = level, actors = actorsPositions))
+    .put(CurrentEventsState, CurrentEvents(None, Nil))
+    .put(UnitState, ())
+    .put(ActorsState, Actors(Map(player.id -> player, monster.id -> monster)))
 
-def createProgram(): SystemAction =
+def createProgram(): WorldState => WorldState =
 
-  val systems: List[SystemAction] = List(
-    EventLoggingSystem(),
-    MovementSystem(),
-    CombatSystem(new Random(1))(),
-    ActorSystem(),
-    AISystem(),
-    TurnsSystem(),
-    CombatObjectsProjector()
+  val systems: List[WorldState => WorldState] = List(
+    EventLoggingHandler(UnitState),
+    MovementHandler(LocationsState),
+    CombatHandler(new Random(1))(LocationsState, ActorsState),
+    ActorHandler(ActorsState),
+    AIHandler(LocationsState, ActorsState),
+    TurnsHandler(ActorsState),
+    CombatObjectsProjector(LocationsState, ActorsState)
   )
 
-  programFromSystems(systems)
+  buildProgram(systems)

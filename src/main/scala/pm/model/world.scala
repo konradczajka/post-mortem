@@ -1,59 +1,20 @@
 package pm.model
 
-import monocle.Lens
-import monocle.macros.GenLens
-import pm.model.{Actor, ActorId, Locations, World}
+import pm.model.{Actor, ActorId, Locations}
 import pm.system.CurrentEvents
 
-type LocationsAndActors = (Locations, Actors)
-type InventoryAndActors = (Inventory, Actors)
+trait StateType { type Type }
 
-// TODO: builder
-case class World(events: CurrentEvents,
-                 locations: Locations,
-                 actors: Actors,
-                 inventory: Inventory = Inventory(Map()))
+trait WorldState:
+  def get(s: StateType): s.Type
+  def put(s: StateType, v: s.Type): WorldState
 
-trait WorldLens[A]:
-  def lens: Lens[World, A]
+case class InMemoryWorldState(private val states: Map[StateType, Any]) extends WorldState:
+  def get(s: StateType): s.Type = states.get(s).map(_.asInstanceOf[s.Type]).getOrElse(throw new IllegalStateException(s"No state of type $s"))
+  def put(s: StateType, v: s.Type): WorldState = InMemoryWorldState(states.updated(s, v))
 
-object World:
-
-  given WorldLens[List[Event]] with
-    def lens = collectedEventsL
-
-  given WorldLens[World] with
-    def lens = worldL
-
-  given WorldLens[Unit] with
-    def lens = unitL
-
-  given WorldLens[Option[Event]] with
-    def lens = currentEventL
-
-  given WorldLens[Actors] with
-    def lens = actorsL
-
-  given WorldLens[Locations] with
-    def lens = locationsL
-
-  given WorldLens[LocationsAndActors] with
-    def lens = locationsAndActorsL
-
-  given WorldLens[InventoryAndActors] with
-    def lens = inventoryAndActorsL
-
-  given WorldLens[Inventory] with
-    def lens = inventoryL
-
-  def worldL: Lens[World, World] = Lens[World, World](w => w)(w => _ => w)
-  def unitL: Lens[World, Unit] = Lens[World, Unit](_ => ())(_ => w => w)
-  def collectedEventsL: Lens[World, List[Event]] = GenLens[World](_.events.collected)
-  def currentEventL: Lens[World, Option[Event]] = GenLens[World](_.events.current)
-
-  def actorsL: Lens[World, Actors] = GenLens[World](_.actors)
-  def locationsL: Lens[World, Locations] = GenLens[World](_.locations)
-  def inventoryL: Lens[World, Inventory] = GenLens[World](_.inventory)
-
-  def locationsAndActorsL: Lens[World, LocationsAndActors] = Lens[World, LocationsAndActors](w => (w.locations, w.actors))((ls, as) => w => w.copy(locations = ls, actors = as))
-  def inventoryAndActorsL: Lens[World, InventoryAndActors] = Lens[World, InventoryAndActors](w => (w.inventory, w.actors))((is, as) => w => w.copy(inventory = is, actors = as))
+// TODO "empty" dla states?
+object LocationsState extends StateType {type Type = Locations}
+object ActorsState extends StateType {type Type = Actors}
+object CurrentEventsState extends StateType {type Type = CurrentEvents}
+object UnitState extends StateType {type Type = Unit}
